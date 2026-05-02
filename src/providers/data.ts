@@ -6,7 +6,6 @@ if(!BACKEND_BASE_URL)
   throw new Error('Please add BACKEND_BASE_URL')
 
 
-
 const options: CreateDataProviderOptions = {
   getList: {
     getEndpoint: ({ resource }) => resource,
