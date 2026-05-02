@@ -2,10 +2,13 @@ import { BACKEND_BASE_URL } from "@/Constants";
 import { ListResponse } from "@/pages/Subjects/types";
 import { createDataProvider, CreateDataProviderOptions } from "@refinedev/rest";
 
+<<<<<<< HEAD
 if(!BACKEND_BASE_URL)
   throw new Error('Please add BACKEND_BASE_URL')
 
 
+=======
+>>>>>>> bc6e31b9f0b3c57ad5abc707b061382a20fa175a
 const options: CreateDataProviderOptions = {
   getList: {
     getEndpoint: ({ resource }) => resource,
@@ -32,12 +35,20 @@ const options: CreateDataProviderOptions = {
     },
 
     mapResponse: async (response) => {
+<<<<<<< HEAD
       const payload: ListResponse = await response.clone().json();
+=======
+      const payload: ListResponse = await response.json();
+>>>>>>> bc6e31b9f0b3c57ad5abc707b061382a20fa175a
       return payload.data ?? [];
     },
 
     getTotalCount: async (response) => {
+<<<<<<< HEAD
       const payload: ListResponse = await response.clone().json();
+=======
+      const payload: ListResponse = await response.json();
+>>>>>>> bc6e31b9f0b3c57ad5abc707b061382a20fa175a
       return payload.pagination?.total ?? payload.data?.length ?? 0;
     }
   }
