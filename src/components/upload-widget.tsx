@@ -8,7 +8,7 @@ const UploadWidget = ({ value = null, onChange, disabled = false }) => {
     const onChangeRef = useRef(onChange);
 
     const [preview, setPreview] = useState<UploadWidgetValue | null>(value);
-    
+
 
     useEffect(() => {
         setPreview(value);
@@ -37,11 +37,11 @@ const UploadWidget = ({ value = null, onChange, disabled = false }) => {
                         publicId: result.info.public_id
                     }
                     setPreview(payload);
-                    setDeleteToken(result.info.delete_token ?? null);
-                    }
+                    onChangeRef.current?.(payload)
+                }
 
-                onChangeRef.current?.(payload)
-            });
+            }
+            );
             return true;
         }
         if (initializeWidget()) return;
@@ -64,7 +64,7 @@ const UploadWidget = ({ value = null, onChange, disabled = false }) => {
         <div className='space-y-2'>
             {preview ? (
                 <div className='upload-preview'>
-                    <img src={preview.url} alt='Preview image'/>
+                    <img src={preview.url} alt='Preview image' />
                 </div>) :
                 <div className='upload-dropzone' role='button' tabIndex={0}
                     onClick={openWidget} onKeyDown={(event) => {

@@ -1,5 +1,5 @@
 import { BACKEND_BASE_URL } from "@/Constants";
-import { ListResponse } from "@/pages/Subjects/types";
+import { CreateResponse, ListResponse } from "@/pages/Subjects/types";
 import { HttpError } from "@refinedev/core";
 import { createDataProvider, CreateDataProviderOptions } from "@refinedev/rest";
 
@@ -58,6 +58,15 @@ const options: CreateDataProviderOptions = {
       const payload: ListResponse = await response.json();
       return payload.pagination?.total ?? payload.data?.length ?? 0;
     }
+  },
+
+  create :{
+    getEndpoint: ({resource}) => resource,
+    buildBodyParams: async({variables}) => variables,
+    mapResponse: async(response) => {
+      const json: CreateResponse = await response.json();
+      return json.data ?? [];
+    },
   }
 }
 

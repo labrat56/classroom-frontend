@@ -1,7 +1,7 @@
 import { CreateView } from "@/components/refine-ui/views/create-view.tsx";
 import { Breadcrumb } from "@/components/refine-ui/layout/breadcrumb.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { useBack } from "@refinedev/core";
+import { useBack, useList } from "@refinedev/core";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Loader2 } from "lucide-react";
 import UploadWidget from "@/components/upload-widget";
+import { Subject, User } from "../Subjects/types";
 
 
 const Create = () => {
@@ -41,6 +42,7 @@ const Create = () => {
     });
 
     const {
+        refineCore: {onFinish},
         handleSubmit,
         formState: { isSubmitting, errors },
         control,
@@ -48,42 +50,40 @@ const Create = () => {
 
     const onSubmit = async (values: z.infer<typeof classSchema>) => {
         try {
-            console.log(values);
+            await onFinish(values);
         } catch (error) {
             console.error("Error creating class:", error);
         }
     };
 
-    const teachers = [
-        {
-            id: 1,
-            name: "John Doe",
-        },
-        {
-            id: 2,
-            name: "Jane Doe",
-        },
-    ];
+    const { query: subjectsQuery } = useList<Subject>({
+        resource: 'subjects',
+        pagination: {
+            pageSize: 100
+        }
+    })
+    const { query: teachersQuery } = useList<User>({
+        resource: 'users',
+        filters: [{
+            field: 'role', operator: 'eq', value: 'teacher'
+        },], pagination: {
+            pageSize: 100
+        }
+    })
 
-    const subjects = [
-        {
-            id: 1,
-            name: "Math",
-            code: "MATH",
-        },
-        {
-            id: 2,
-            name: "English",
-            code: "ENG",
-        },
-    ];
+    const subjects = subjectsQuery?.data?.data || [];
+    const subjectsLoading = subjectsQuery.isLoading;
+
+    const teachers = teachersQuery?.data?.data || [];
+    const teachersLoading = teachersQuery.isLoading;
+
 
     const bannerPublicId = form.watch('bannerCldPubId');
 
-    const setBannerImage = (file, field) => {
-        if(file) {
+    const setBannerImage = (file: any, field: any) => {
+        if (file) {
             field.onChange(file.url)
-            form.setValue('bannerCldPubId', file.publidId, {
+            form.setValue('bannerCldPubId', file.publicId, {
                 shouldValidate: true,
                 shouldDirty: true,
             })
@@ -120,7 +120,7 @@ const Create = () => {
 
                     <CardContent className="mt-7">
                         <Form {...form}>
-                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
                                 <FormField
                                     control={control}
                                     name='bannerUrl'
@@ -128,17 +128,18 @@ const Create = () => {
                                         <FormItem>
                                             <FormLabel>Banner Image <span className="text-orange-600">*</span></FormLabel>
                                             <FormControl>
-                                                <UploadWidget 
+                                                <UploadWidget
                                                     value={
-                                                        field.value ? { 
-                                                            url: field.value, 
-                                                            publicId: bannerPublicId ?? ''} : null
-                                                            }
+                                                        field.value ? {
+                                                            url: field.value,
+                                                            publicId: bannerPublicId ?? ''
+                                                        } : null
+                                                    }
                                                     onChange={(file: any) => setBannerImage(file, field)} />
                                             </FormControl>
-                                            <FormMessage/>
+                                            <FormMessage />
                                             {errors.bannerCldPubId && !errors.bannerUrl && (
-                                                <p className="text-destructive text-small">{errors.bannerCldPubId.messange.toString()}</p>
+                                                <p className="text-destructive text-small">{errors.bannerCldPubId.message.toString()}</p>
                                             )}
                                         </FormItem>
                                     )}
@@ -177,6 +178,7 @@ const Create = () => {
                                                         field.onChange(Number(value))
                                                     }
                                                     value={field.value?.toString()}
+                                                    disabled={subjectsLoading}
                                                 >
                                                     <FormControl>
                                                         <SelectTrigger className="w-full">
@@ -210,6 +212,7 @@ const Create = () => {
                                                 <Select
                                                     onValueChange={field.onChange}
                                                     value={field.value}
+                                                    disabled={teachersLoading}
                                                 >
                                                     <FormControl>
                                                         <SelectTrigger className="w-full">
@@ -306,7 +309,7 @@ const Create = () => {
 
                                 <Separator />
 
-                                <Button type="submit" size="lg" className="w-full">
+                                <Button type="submit" size="lg" className="w-full" >
                                     {isSubmitting ? (
                                         <div className="flex gap-1">
                                             <span>Creating Class...</span>
