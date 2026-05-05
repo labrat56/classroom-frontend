@@ -1,17 +1,18 @@
 import { BACKEND_BASE_URL } from "@/Constants";
-import { CreateResponse, ListResponse } from "@/pages/Subjects/types";
+import { CreateResponse, GetOneResponse, ListResponse } from "@/pages/Subjects/types";
 import { HttpError } from "@refinedev/core";
 import { createDataProvider, CreateDataProviderOptions } from "@refinedev/rest";
 
-if(!BACKEND_BASE_URL)
+
+if (!BACKEND_BASE_URL)
   throw new Error('Please add BACKEND_BASE_URL')
 
-const buildhttpError = async( response: Response): Promise<HttpError> => {
+const buildhttpError = async (response: Response): Promise<HttpError> => {
   let message = 'Request failed.'
 
   try {
-    const payload = (await response.json()) as { message?: string}
-    if(payload?.message) message = payload.message;
+    const payload = (await response.json()) as { message?: string }
+    if (payload?.message) message = payload.message;
   } catch {
 
   } return {
@@ -25,20 +26,20 @@ const options: CreateDataProviderOptions = {
   getList: {
     getEndpoint: ({ resource }) => resource,
 
-    buildQueryParams: async({resource, pagination, filters}) => {
+    buildQueryParams: async ({ resource, pagination, filters }) => {
       const page = pagination?.currentPage ?? 1;
       const pageSize = pagination?.pageSize ?? 1;
 
-      const params: Record<string, string|number> = {page, limit: pageSize};
+      const params: Record<string, string | number> = { page, limit: pageSize };
 
       filters?.forEach((filter) => {
         const field = 'field' in filter ? filter.field : '';
 
         const value = String(filter.value);
 
-        if(resource === 'subjects') {
-          if(field === 'department') params.department = value;
-          if(field === 'name' || field === 'code') params.search = value;
+        if (resource === 'subjects') {
+          if (field === 'department') params.department = value;
+          if (field === 'name' || field === 'code') params.search = value;
 
         }
       })
@@ -47,27 +48,36 @@ const options: CreateDataProviderOptions = {
     },
 
     mapResponse: async (response) => {
-      if(!response.ok) throw await buildhttpError(response);
+      if (!response.ok) throw await buildhttpError(response);
       const payload: ListResponse = await response.clone().json();
-      
+
       return payload.data ?? [];
     },
-    
+
     getTotalCount: async (response) => {
-      if(!response.ok) throw await buildhttpError(response);
+      if (!response.ok) throw await buildhttpError(response);
       const payload: ListResponse = await response.json();
       return payload.pagination?.total ?? payload.data?.length ?? 0;
     }
   },
 
-  create :{
-    getEndpoint: ({resource}) => resource,
-    buildBodyParams: async({variables}) => variables,
-    mapResponse: async(response) => {
+  create: {
+    getEndpoint: ({ resource }) => resource,
+    buildBodyParams: async ({ variables }) => variables,
+    mapResponse: async (response) => {
       const json: CreateResponse = await response.json();
       return json.data ?? [];
     },
+  },
+
+  getOne: {
+    getEndpoint: ({resource, id}) => `${resource}/${id}`,
+    mapResponse: async(response) => {
+      const json: GetOneResponse = await response.json();
+      return json.data ?? [];
+    }
   }
+
 }
 
 const { dataProvider } = createDataProvider(BACKEND_BASE_URL, options);
